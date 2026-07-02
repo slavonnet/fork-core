@@ -1,6 +1,7 @@
 """Button platform for LG IR integration."""
 
 from dataclasses import dataclass
+import logging
 from typing import override
 
 from infrared_protocols.codes.lg.tv import LGTVCode
@@ -15,6 +16,7 @@ from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LGDeviceType
 from .entity import LgIrEntity
 
 PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -151,4 +153,12 @@ class LgIrButton(LgIrEntity, InfraredEmitterConsumerEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
+        _LOGGER.debug(
+            "lg_infrared button press requested: entity=%s key=%s context_id=%s user_id=%s parent_id=%s",
+            self.entity_id,
+            self.entity_description.key,
+            self._context.id if self._context is not None else None,
+            self._context.user_id if self._context is not None else None,
+            self._context.parent_id if self._context is not None else None,
+        )
         await self._send_command(self.entity_description.command_code.to_command())

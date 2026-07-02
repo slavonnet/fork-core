@@ -63,6 +63,14 @@ async def async_send_command(
     if context is not None:
         entity.async_set_context(context)
 
+    _LOGGER.debug(
+        "infrared send request: target=%s command=%s context_id=%s user_id=%s parent_id=%s",
+        entity_id,
+        command,
+        context.id if context is not None else None,
+        context.user_id if context is not None else None,
+        context.parent_id if context is not None else None,
+    )
     await entity.async_send_command_internal(command)
 
 
