@@ -2,12 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.zha_infrared.const import (
-    CONF_DEVICE,
-    CONF_ENDPOINT_ID,
-    CONF_IEEE,
-    DOMAIN,
-)
+from homeassistant.components.zha_infrared.const import DOMAIN
 from homeassistant.components.zha_infrared.helpers import SupportedDevice
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -45,74 +40,41 @@ async def test_user_flow_aborts_without_supported_devices(hass: HomeAssistant) -
 
 
 async def test_user_flow_create_entry(hass: HomeAssistant) -> None:
-    """Create a config entry for a discovered TS1201-like device."""
+    """Create a single integration entry when supported devices exist."""
     MockConfigEntry(domain="zha", data={}).add_to_hass(hass)
-    device = SupportedDevice(
-        key="8c:65:a3:ff:fe:92:63:ce:1",
-        label="Living Room TS1201",
-        ieee="8c:65:a3:ff:fe:92:63:ce",
-        endpoint_id=1,
-    )
+    device = SupportedDevice(name="Living Room TS1201", ieee="aa:bb", endpoint_id=1)
 
-    with (
-        patch(
-            "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
-            return_value=[device],
-        ),
-        patch(
-            "homeassistant.components.zha_infrared.config_flow.get_supported_device_by_key",
-            return_value=device,
-        ),
+    with patch(
+        "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
+        return_value=[device],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE: device.key},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Living Room TS1201 IR"
-    assert result["data"] == {
-        CONF_IEEE: "8c:65:a3:ff:fe:92:63:ce",
-        CONF_ENDPOINT_ID: 1,
-    }
+    assert result["title"] == "ZHA Infrared"
+    assert result["data"] == {}
 
 
 async def test_user_flow_aborts_when_already_configured(hass: HomeAssistant) -> None:
-    """Abort when the selected device unique id is already configured."""
+    """Abort when the integration is already configured."""
     MockConfigEntry(domain="zha", data={}).add_to_hass(hass)
-    device = SupportedDevice(
-        key="8c:65:a3:ff:fe:92:63:ce:1",
-        label="Living Room TS1201",
-        ieee="8c:65:a3:ff:fe:92:63:ce",
-        endpoint_id=1,
-    )
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{device.ieee}-{device.endpoint_id}",
-        data={CONF_IEEE: device.ieee, CONF_ENDPOINT_ID: device.endpoint_id},
+        unique_id=DOMAIN,
+        data={},
     ).add_to_hass(hass)
+    device = SupportedDevice(name="Living Room TS1201", ieee="aa:bb", endpoint_id=1)
 
-    with (
-        patch(
-            "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
-            return_value=[device],
-        ),
-        patch(
-            "homeassistant.components.zha_infrared.config_flow.get_supported_device_by_key",
-            return_value=device,
-        ),
+    with patch(
+        "homeassistant.components.zha_infrared.config_flow.get_supported_devices",
+        return_value=[device],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICE: device.key},
         )
 
     assert result["type"] is FlowResultType.ABORT

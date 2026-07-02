@@ -17,8 +17,7 @@ from .const import TS1201_MODEL, TUYA_CLUSTER_IR_CONTROL, TUYA_CLUSTER_IR_TRANSM
 class SupportedDevice:
     """A supported TS1201-like IR bridge device."""
 
-    key: str
-    label: str
+    name: str
     ieee: str
     endpoint_id: int
 
@@ -53,31 +52,16 @@ def get_supported_devices(hass: HomeAssistant) -> list[SupportedDevice]:
             if not _is_ts1201_like(model, endpoint):
                 continue
 
-            label = f"{name} ({ieee}) EP {endpoint_id}"
-            key = f"{ieee}:{endpoint_id}"
             devices.append(
                 SupportedDevice(
-                    key=key,
-                    label=label,
+                    name=name,
                     ieee=ieee,
                     endpoint_id=endpoint_id,
                 )
             )
 
-    return sorted(devices, key=lambda item: item.label.casefold())
-
-
-def get_supported_device_by_key(
-    hass: HomeAssistant, selected_key: str
-) -> SupportedDevice | None:
-    """Resolve a selected config-flow key into a supported device."""
-    return next(
-        (
-            device
-            for device in get_supported_devices(hass)
-            if device.key == selected_key
-        ),
-        None,
+    return sorted(
+        devices, key=lambda item: (item.name.casefold(), item.ieee, item.endpoint_id)
     )
 
 

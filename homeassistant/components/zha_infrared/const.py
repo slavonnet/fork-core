@@ -2,7 +2,6 @@
 
 DOMAIN = "zha_infrared"
 
-CONF_DEVICE = "device"
 CONF_ENDPOINT_ID = "endpoint_id"
 CONF_IEEE = "ieee"
 

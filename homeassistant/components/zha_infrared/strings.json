@@ -6,17 +6,7 @@
       "no_zha": "Set up Zigbee Home Automation (ZHA) before adding ZHA Infrared."
     },
     "error": {
-      "device_not_found": "Selected device is no longer available.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "step": {
-      "user": {
-        "data": {
-          "device": "TS1201 hub"
-        },
-        "description": "Select a TS1201-compatible Zigbee IR hub exposed by ZHA.",
-        "title": "Set up ZHA Infrared"
-      }
     }
   },
   "entity": {

@@ -11,28 +11,30 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONF_ENDPOINT_ID,
-    CONF_IEEE,
     DOMAIN,
     TUYA_IR_SEND_COMMAND_ID,
 )
-from .helpers import encode_raw_to_tuya_base64, get_ir_control_cluster
+from .helpers import (
+    SupportedDevice,
+    encode_raw_to_tuya_base64,
+    get_ir_control_cluster,
+    get_supported_devices,
+)
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    _hass: HomeAssistant,
-    entry: ConfigEntry,
+    hass: HomeAssistant,
+    _entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up ZHA infrared entity from a config entry."""
+    """Set up ZHA infrared entities from auto-detected TS1201-like hubs."""
+    supported_devices = get_supported_devices(hass)
     async_add_entities(
         [
-            ZhaInfraredEmitterEntity(
-                ieee=entry.data[CONF_IEEE],
-                endpoint_id=entry.data[CONF_ENDPOINT_ID],
-            )
+            ZhaInfraredEmitterEntity(device)
+            for device in supported_devices
         ]
     )
 
@@ -43,11 +45,12 @@ class ZhaInfraredEmitterEntity(InfraredEmitterEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "infrared_emitter"
 
-    def __init__(self, ieee: str, endpoint_id: int) -> None:
+    def __init__(self, device: SupportedDevice) -> None:
         """Initialize the emitter entity."""
-        self._ieee = ieee
-        self._endpoint_id = endpoint_id
-        self._attr_unique_id = f"{ieee}-{endpoint_id}-infrared-emitter"
+        self._ieee = device.ieee
+        self._endpoint_id = device.endpoint_id
+        self._attr_unique_id = f"{self._ieee}-{self._endpoint_id}-infrared-emitter"
+        self._attr_name = f"{device.name} IR emitter"
 
     @property
     def available(self) -> bool:
